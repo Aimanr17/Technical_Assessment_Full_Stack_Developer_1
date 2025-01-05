@@ -44,8 +44,12 @@ function App() {
       }
       setIsFormOpen(false);
       setSelectedItem(null);
+      // Refresh items list
+      dispatch(fetchItems());
+      toast.success(selectedItem ? 'Item updated successfully!' : 'Item added successfully!');
     } catch (error) {
       console.error('Failed to save item:', error);
+      toast.error('Failed to save item. Please try again.');
     }
   };
 
