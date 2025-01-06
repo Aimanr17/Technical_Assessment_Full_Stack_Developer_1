@@ -1,14 +1,14 @@
 import axios, { AxiosError } from 'axios';
 import { CreateItemDto, Item, UpdateItemDto } from '../types/item';
 
-const API_URL = '/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 const api = axios.create({
   baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json',
   },
-});
+})
 
 const handleError = (error: unknown) => {
   if (axios.isAxiosError(error)) {
