@@ -2,6 +2,7 @@ import express, { Express, Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import itemRoute from "./routes/item.route";
+import sequelize from './config/database';
 
 const app: Express = express();
 const port = process.env.PORT || 3001;
@@ -14,7 +15,37 @@ app.use(express.urlencoded({ extended: true }));
 
 // Health check endpoint
 app.get('/', (req: Request, res: Response) => {
-  res.json({ status: 'ok', message: 'Server is running' });
+  res.json({ 
+    status: 'ok', 
+    message: 'Server is running',
+    env: process.env.NODE_ENV,
+    time: new Date().toISOString()
+  });
+});
+
+// Database test endpoint
+app.get('/db-test', async (req: Request, res: Response) => {
+  try {
+    await sequelize.authenticate();
+    const [results] = await sequelize.query('SELECT 1+1 as result');
+    res.json({ 
+      status: 'ok', 
+      message: 'Database connection successful',
+      results 
+    });
+  } catch (error: any) {
+    res.status(500).json({ 
+      status: 'error', 
+      message: 'Database connection failed',
+      error: {
+        message: error.message,
+        code: error.original?.code,
+        errno: error.original?.errno,
+        sqlState: error.original?.sqlState,
+        sqlMessage: error.original?.sqlMessage
+      }
+    });
+  }
 });
 
 // Routes
