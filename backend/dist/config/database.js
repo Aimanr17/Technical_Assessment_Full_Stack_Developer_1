@@ -1,8 +1,10 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-const tslib_1 = require("tslib");
 const sequelize_1 = require("sequelize");
-const dotenv_1 = tslib_1.__importDefault(require("dotenv"));
+const dotenv_1 = __importDefault(require("dotenv"));
 // Load environment variables
 dotenv_1.default.config();
 // Log environment variables (excluding sensitive data)
@@ -48,13 +50,15 @@ sequelize
     });
 })
     .catch(err => {
+    var _a, _b, _c, _d;
     console.error('❌ Unable to connect to the database:', {
         message: err.message,
-        code: err.original?.code,
-        errno: err.original?.errno,
-        sqlState: err.original?.sqlState,
-        sqlMessage: err.original?.sqlMessage
+        code: (_a = err.original) === null || _a === void 0 ? void 0 : _a.code,
+        errno: (_b = err.original) === null || _b === void 0 ? void 0 : _b.errno,
+        sqlState: (_c = err.original) === null || _c === void 0 ? void 0 : _c.sqlState,
+        sqlMessage: (_d = err.original) === null || _d === void 0 ? void 0 : _d.sqlMessage
     });
     // Don't exit the process, let the application handle the error
 });
 exports.default = sequelize;
+//# sourceMappingURL=database.js.map

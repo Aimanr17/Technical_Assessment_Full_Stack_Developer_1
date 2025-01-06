@@ -1,15 +1,11 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-const tslib_1 = require("tslib");
 const sequelize_1 = require("sequelize");
-const database_1 = tslib_1.__importDefault(require("../config/database"));
+const database_1 = __importDefault(require("../config/database"));
 class Item extends sequelize_1.Model {
-    id;
-    name;
-    description;
-    price;
-    createdAt;
-    updatedAt;
 }
 Item.init({
     id: {
@@ -46,3 +42,4 @@ Item.init({
     timestamps: true,
 });
 exports.default = Item;
+//# sourceMappingURL=item.model.js.map

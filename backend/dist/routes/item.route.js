@@ -14,3 +14,4 @@ router.put('/:id', item_controller_1.updateItemController);
 // Delete item
 router.delete('/:id', item_controller_1.deleteItemController);
 exports.default = router;
+//# sourceMappingURL=item.route.js.map

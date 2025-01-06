@@ -8,3 +8,4 @@ exports.createItemSchema = zod_1.z.object({
     price: zod_1.z.number().positive(),
 });
 exports.updateItemSchema = exports.createItemSchema.partial();
+//# sourceMappingURL=item.validator.js.map
