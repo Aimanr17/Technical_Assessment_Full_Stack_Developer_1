@@ -32,13 +32,18 @@ api.interceptors.response.use(
   }
 );
 
+interface ApiErrorResponse {
+  message?: string;
+  error?: string;
+}
+
 const handleError = (error: unknown) => {
   if (axios.isAxiosError(error)) {
-    const axiosError = error as AxiosError;
-    if (!axiosError.response) {
-      throw new Error('Unable to connect to the server. Please check if the backend is running.');
-    }
-    throw new Error(axiosError.response.data?.message || 'An error occurred while processing your request.');
+    const axiosError = error as AxiosError<ApiErrorResponse>;
+    const errorMessage = axiosError.response?.data?.message || 
+                        axiosError.response?.data?.error || 
+                        'An error occurred while processing your request.';
+    throw new Error(errorMessage);
   }
   throw error;
 };
@@ -46,7 +51,7 @@ const handleError = (error: unknown) => {
 export const itemsApi = {
   getAll: async (): Promise<Item[]> => {
     try {
-      const response = await api.get('/items');
+      const response = await api.get<Item[]>('/items');
       return response.data;
     } catch (error) {
       throw handleError(error);
@@ -55,7 +60,7 @@ export const itemsApi = {
 
   getById: async (id: number): Promise<Item> => {
     try {
-      const response = await api.get(`/items/${id}`);
+      const response = await api.get<Item>(`/items/${id}`);
       return response.data;
     } catch (error) {
       throw handleError(error);
@@ -64,7 +69,7 @@ export const itemsApi = {
 
   create: async (item: CreateItemDto): Promise<Item> => {
     try {
-      const response = await api.post('/items', item);
+      const response = await api.post<Item>('/items', item);
       return response.data;
     } catch (error) {
       throw handleError(error);
@@ -73,7 +78,7 @@ export const itemsApi = {
 
   update: async (id: number, item: UpdateItemDto): Promise<Item> => {
     try {
-      const response = await api.put(`/items/${id}`, item);
+      const response = await api.put<Item>(`/items/${id}`, item);
       return response.data;
     } catch (error) {
       throw handleError(error);
@@ -86,7 +91,7 @@ export const itemsApi = {
     } catch (error) {
       throw handleError(error);
     }
-  },
+  }
 };
 
 export const testApi = {

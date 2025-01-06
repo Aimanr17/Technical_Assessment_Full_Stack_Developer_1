@@ -5,135 +5,157 @@ import { Toaster, toast } from 'react-hot-toast';
 import { useAppDispatch, useAppSelector } from './store/hooks';
 import { fetchItems, createItem, updateItem, deleteItem } from './store/itemsSlice';
 import { PlusIcon } from '@heroicons/react/24/outline';
-import { Item, CreateItemDto, UpdateItemDto } from './types/item';
+import { Item, CreateItemDto, ItemFormData } from './types/item';
 
 function App() {
   const dispatch = useAppDispatch();
   const { items, loading, error } = useAppSelector((state) => state.items);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<Item | null>(null);
+  const [formData, setFormData] = useState<ItemFormData>({
+    name: '',
+    description: '',
+    price: 0
+  });
 
   useEffect(() => {
     dispatch(fetchItems());
   }, [dispatch]);
 
+  useEffect(() => {
+    if (error) {
+      toast.error(error);
+    }
+  }, [error]);
+
   const handleAddItem = () => {
     setSelectedItem(null);
+    setFormData({ name: '', description: '', price: 0 });
     setIsFormOpen(true);
   };
 
   const handleEditItem = (item: Item) => {
     setSelectedItem(item);
+    setFormData({
+      name: item.name,
+      description: item.description || '',
+      price: item.price
+    });
     setIsFormOpen(true);
   };
 
   const handleDeleteItem = async (id: number) => {
     try {
       await dispatch(deleteItem(id)).unwrap();
+      toast.success('Item deleted successfully!');
+      await dispatch(fetchItems());
     } catch (error) {
-      console.error('Failed to delete item:', error);
+      console.error('Error deleting item:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to delete item');
     }
   };
 
-  const handleFormSubmit = async (formData: CreateItemDto | UpdateItemDto) => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     try {
       if (selectedItem) {
-        await dispatch(updateItem({ id: selectedItem.id, data: formData })).unwrap();
+        await dispatch(updateItem({ 
+          id: selectedItem.id, 
+          data: {
+            name: formData.name,
+            description: formData.description,
+            price: formData.price
+          }
+        })).unwrap();
+        toast.success('Item updated successfully!');
       } else {
-        await dispatch(createItem(formData)).unwrap();
+        const createData: CreateItemDto = {
+          name: formData.name,
+          description: formData.description,
+          price: formData.price
+        };
+        await dispatch(createItem(createData)).unwrap();
+        toast.success('Item created successfully!');
       }
-      setIsFormOpen(false);
+      setFormData({ name: '', description: '', price: 0 });
       setSelectedItem(null);
-      // Refresh items list
-      dispatch(fetchItems());
-      toast.success(selectedItem ? 'Item updated successfully!' : 'Item added successfully!');
+      setIsFormOpen(false);
+      await dispatch(fetchItems());
     } catch (error) {
-      console.error('Failed to save item:', error);
-      toast.error('Failed to save item. Please try again.');
+      console.error('Error submitting form:', error);
+      toast.error(error instanceof Error ? error.message : 'An error occurred');
     }
   };
 
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
-        <div className="w-full max-w-lg mx-auto px-4">
-          <div className="bg-white shadow-lg rounded-xl p-8 text-center">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Unable to connect to the server</h2>
-            <p className="text-red-600 mb-6">{error}</p>
-            <button
-              onClick={() => {
-                dispatch(fetchItems());
-                toast.loading('Retrying connection...', { id: 'retry' });
-              }}
-              className="px-6 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200"
-            >
-              Retry Connection
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: name === 'price' ? parseFloat(value) || 0 : value
+    }));
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      <Toaster position="top-right" />
-      
-      <div className="min-h-screen w-full p-4">
-        <div className="flex justify-between items-center mb-6 px-2">
-          <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-indigo-600">
-            Item Manager
-          </h1>
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">Items Management</h1>
           <button
             onClick={handleAddItem}
-            className="inline-flex items-center px-6 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200"
+            className="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 flex items-center space-x-2 transition-colors duration-200"
           >
-            <PlusIcon className="h-5 w-5 mr-2" />
-            Add Item
+            <PlusIcon className="h-5 w-5" />
+            <span>Add Item</span>
           </button>
         </div>
 
         {loading ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
-            {[...Array(12)].map((_, i) => (
-              <div
-                key={i}
-                className="bg-white rounded-xl shadow-lg p-6 animate-pulse"
-              >
-                <div className="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
-                <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
-                <div className="h-4 bg-gray-200 rounded w-full mb-2"></div>
-                <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+          <div className="flex justify-center items-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {items.map((item) => (
+              <div key={item.id} className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200">
+                <ItemCard
+                  item={item}
+                  onEdit={() => handleEditItem(item)}
+                  onDelete={() => handleDeleteItem(item.id)}
+                />
               </div>
             ))}
           </div>
-        ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
-            {items.map((item) => (
-              <ItemCard
-                key={item.id}
-                item={item}
-                onEdit={handleEditItem}
-                onDelete={handleDeleteItem}
-              />
-            ))}
+        )}
+
+        {items.length === 0 && !loading && (
+          <div className="text-center py-12">
+            <p className="text-gray-500 text-lg">No items found. Add some items to get started!</p>
           </div>
         )}
 
-        {!loading && items.length === 0 && (
-          <div className="text-center py-16">
-            <p className="text-xl text-gray-500">
-              No items found. Click "Add Item" to create one.
-            </p>
+        {isFormOpen && (
+          <div className="fixed inset-0 bg-black/25 backdrop-blur-sm flex items-start justify-center pt-20 z-50">
+            <div className="w-full max-w-2xl mx-4">
+              <ItemForm
+                formData={formData}
+                selectedItem={selectedItem}
+                onSubmit={handleSubmit}
+                onChange={handleInputChange}
+                onClose={() => setIsFormOpen(false)}
+              />
+            </div>
           </div>
         )}
       </div>
-
-      <ItemForm
-        isOpen={isFormOpen}
-        onClose={() => setIsFormOpen(false)}
-        onSubmit={handleFormSubmit}
-        item={selectedItem}
+      <Toaster 
+        position="top-right"
+        toastOptions={{
+          duration: 3000,
+          style: {
+            background: '#363636',
+            color: '#fff',
+          },
+        }}
       />
     </div>
   );

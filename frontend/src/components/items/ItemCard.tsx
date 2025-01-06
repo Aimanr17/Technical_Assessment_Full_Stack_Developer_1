@@ -24,29 +24,32 @@ export const ItemCard = ({ item, onEdit, onDelete }: ItemCardProps) => {
           <div className="flex space-x-2">
             <button
               onClick={() => onEdit(item)}
-              className="p-1.5 text-gray-500 hover:text-purple-600 rounded-lg hover:bg-purple-50 transition-colors"
+              className="text-blue-600 hover:text-blue-800 transition-colors duration-200"
+              title="Edit item"
             >
               <PencilIcon className="h-5 w-5" />
             </button>
             <button
               onClick={() => onDelete(item.id)}
-              className="p-1.5 text-gray-500 hover:text-red-600 rounded-lg hover:bg-red-50 transition-colors"
+              className="text-red-600 hover:text-red-800 transition-colors duration-200"
+              title="Delete item"
             >
               <TrashIcon className="h-5 w-5" />
             </button>
           </div>
         </div>
         
-        <div className="mb-4">
-          <span className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-indigo-600">
-            {formattedPrice}
+        <p className="text-gray-600 mb-4">
+          {item.description || 'No description available'}
+        </p>
+        
+        <div className="flex justify-between items-center text-sm">
+          <span className="text-gray-500">
+            Price: <span className="font-semibold text-gray-900">{formattedPrice}</span>
           </span>
-        </div>
-
-        <p className="text-gray-600 text-sm mb-4">{item.description}</p>
-
-        <div className="text-xs text-gray-400">
-          Added {new Date(item.createdAt).toLocaleDateString()}
+          <span className="text-gray-500">
+            ID: <span className="font-mono text-gray-900">#{item.id}</span>
+          </span>
         </div>
       </div>
     </div>

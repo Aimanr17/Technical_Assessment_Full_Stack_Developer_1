@@ -13,4 +13,14 @@ export interface CreateItemDto {
   price: number;
 }
 
-export interface UpdateItemDto extends Partial<CreateItemDto> {}
+export interface UpdateItemDto {
+  name?: string;
+  description?: string;
+  price?: number;
+}
+
+export interface ItemFormData {
+  name: string;
+  description: string;
+  price: number;
+}
