@@ -8,22 +8,22 @@
   ],
   "routes": [
     {
-      "src": "/items",
+      "src": "/api/items",
       "methods": ["GET", "POST", "PUT", "DELETE"],
       "dest": "/app.ts"
     },
     {
-      "src": "/items/(.*)",
+      "src": "/api/items/(.*)",
       "methods": ["GET", "POST", "PUT", "DELETE"],
       "dest": "/app.ts"
     },
     {
-      "src": "/db-test",
+      "src": "/api/db-test",
       "methods": ["GET"],
       "dest": "/app.ts"
     },
     {
-      "src": "/(.*)",
+      "src": "/api/(.*)",
       "dest": "/app.ts"
     }
   ],
