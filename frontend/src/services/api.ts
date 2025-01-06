@@ -1,14 +1,36 @@
 import axios, { AxiosError } from 'axios';
 import { CreateItemDto, Item, UpdateItemDto } from '../types/item';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
 const api = axios.create({
   baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json',
   },
-})
+});
+
+// Add response interceptor for debugging
+api.interceptors.response.use(
+  (response) => {
+    console.log('API Response:', {
+      url: response.config.url,
+      method: response.config.method,
+      status: response.status,
+      data: response.data
+    });
+    return response;
+  },
+  (error) => {
+    console.error('API Error:', {
+      url: error.config?.url,
+      method: error.config?.method,
+      status: error.response?.status,
+      data: error.response?.data
+    });
+    return Promise.reject(error);
+  }
+);
 
 const handleError = (error: unknown) => {
   if (axios.isAxiosError(error)) {
@@ -65,4 +87,24 @@ export const itemsApi = {
       throw handleError(error);
     }
   },
+};
+
+export const testApi = {
+  healthCheck: async () => {
+    try {
+      const response = await api.get('/');
+      return response.data;
+    } catch (error) {
+      throw handleError(error);
+    }
+  },
+  
+  dbTest: async () => {
+    try {
+      const response = await api.get('/db-test');
+      return response.data;
+    } catch (error) {
+      throw handleError(error);
+    }
+  }
 };

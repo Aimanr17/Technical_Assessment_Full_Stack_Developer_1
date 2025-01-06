@@ -8,9 +8,12 @@ export const getAllItemsController = async (
   next: NextFunction
 ) => {
   try {
+    console.log('[getAllItemsController] Getting all items');
     const items = await getAllItems();
+    console.log(`[getAllItemsController] Found ${items.length} items`);
     res.status(200).json(items);
   } catch (err) {
+    console.error('[getAllItemsController] Error:', err);
     next(err);
   }
 };
@@ -22,9 +25,12 @@ export const getItemByIdController = async (
 ) => {
   try {
     const id = parseInt(req.params.id);
+    console.log(`[getItemByIdController] Getting item with id: ${id}`);
     const item = await getItemById(id);
+    console.log(`[getItemByIdController] Found item:`, item);
     res.status(200).json(item);
   } catch (err) {
+    console.error(`[getItemByIdController] Error getting item ${req.params.id}:`, err);
     if (err instanceof Error && err.message === 'Item not found') {
       res.status(404).json({ message: 'Item not found' });
     } else {
@@ -39,12 +45,15 @@ export const createItemController = async (
   next: NextFunction
 ) => {
   try {
+    console.log('[createItemController] Creating new item:', req.body);
     const validatedData = createItemSchema.parse(req.body);
-    const item = await createItem(validatedData);
-    res.status(201).json(item);
+    const newItem = await createItem(validatedData);
+    console.log('[createItemController] Created item:', newItem);
+    res.status(201).json(newItem);
   } catch (err) {
-    if (err instanceof Error) {
-      res.status(400).json({ message: err.message });
+    console.error('[createItemController] Error:', err);
+    if (err instanceof Error && err.name === 'ZodError') {
+      res.status(400).json({ message: 'Invalid input data', errors: err });
     } else {
       next(err);
     }
@@ -58,15 +67,20 @@ export const updateItemController = async (
 ) => {
   try {
     const id = parseInt(req.params.id);
+    console.log(`[updateItemController] Updating item ${id}:`, req.body);
     const validatedData = updateItemSchema.parse(req.body);
-    const item = await updateItem(id, validatedData);
-    res.status(200).json(item);
+    const updatedItem = await updateItem(id, validatedData);
+    console.log('[updateItemController] Updated item:', updatedItem);
+    res.status(200).json(updatedItem);
   } catch (err) {
+    console.error(`[updateItemController] Error updating item ${req.params.id}:`, err);
     if (err instanceof Error) {
       if (err.message === 'Item not found') {
         res.status(404).json({ message: 'Item not found' });
+      } else if (err.name === 'ZodError') {
+        res.status(400).json({ message: 'Invalid input data', errors: err });
       } else {
-        res.status(400).json({ message: err.message });
+        next(err);
       }
     } else {
       next(err);
@@ -81,9 +95,12 @@ export const deleteItemController = async (
 ) => {
   try {
     const id = parseInt(req.params.id);
+    console.log(`[deleteItemController] Deleting item ${id}`);
     await deleteItem(id);
+    console.log(`[deleteItemController] Successfully deleted item ${id}`);
     res.status(204).send();
   } catch (err) {
+    console.error(`[deleteItemController] Error deleting item ${req.params.id}:`, err);
     if (err instanceof Error && err.message === 'Item not found') {
       res.status(404).json({ message: 'Item not found' });
     } else {
