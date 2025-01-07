@@ -1,8 +1,7 @@
 # Full Stack Items Management Application
 
 ## Live Demo
-- Frontend: [Netlify Deployment URL]
-- Backend: https://technical-assessment-full-stack-developer-1.vercel.app/api
+- Frontend: https://arkmind-aiman.vercel.app/
 
 ## Features
 - Create, Read, Update, and Delete items
