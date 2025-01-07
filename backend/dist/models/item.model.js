@@ -16,30 +16,30 @@ Item.init({
     name: {
         type: sequelize_1.DataTypes.STRING(100),
         allowNull: false,
+        validate: {
+            notEmpty: true,
+            len: [1, 100]
+        }
     },
     description: {
-        type: sequelize_1.DataTypes.STRING(500),
-        allowNull: true,
+        type: sequelize_1.DataTypes.TEXT,
+        allowNull: true
     },
     price: {
-        type: sequelize_1.DataTypes.DOUBLE, // Changed to DOUBLE for better precision
+        type: sequelize_1.DataTypes.DECIMAL(10, 2),
         allowNull: false,
-        get() {
-            const value = this.getDataValue('price');
-            return value === null ? null : Number(value);
-        },
         validate: {
             isPositive(value) {
-                if (value <= 0) {
-                    throw new Error('Price must be positive');
+                if (parseFloat(value.toString()) <= 0) {
+                    throw new Error('Price must be greater than 0');
                 }
-            },
+            }
         },
     },
 }, {
     sequelize: database_1.default,
     tableName: 'items',
-    timestamps: true,
+    timestamps: true
 });
 exports.default = Item;
 //# sourceMappingURL=item.model.js.map

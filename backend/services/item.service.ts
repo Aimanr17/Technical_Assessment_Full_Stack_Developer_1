@@ -9,7 +9,7 @@ export const getAllItems = async () => {
       const data = item.toJSON();
       return {
         ...data,
-        price: parseFloat(data.price.toString()) // Ensure price is converted to number
+        price: parseFloat(data.price.toString())
       };
     });
   } catch (error) {
@@ -30,7 +30,7 @@ export const getItemById = async (id: number) => {
     const data = item.toJSON();
     return {
       ...data,
-      price: parseFloat(data.price.toString()) // Ensure price is converted to number
+      price: parseFloat(data.price.toString())
     };
   } catch (error) {
     console.error(`[ItemService] Error getting item ${id}:`, error);
@@ -43,7 +43,7 @@ export const createItem = async (itemData: { name: string; description?: string;
     console.log('[ItemService] Creating new item:', itemData);
     const item = await Item.create({
       ...itemData,
-      price: parseFloat(itemData.price.toString()) // Ensure price is converted to number
+      price: parseFloat(itemData.price.toString())
     });
     console.log('[ItemService] Created item:', item.toJSON());
     const data = item.toJSON();
@@ -65,15 +65,14 @@ export const updateItem = async (id: number, itemData: Partial<{ name: string; d
       console.log(`[ItemService] Item ${id} not found`);
       throw new Error('Item not found');
     }
-    
-    const updatedData = {
-      ...itemData,
-      price: itemData.price ? parseFloat(itemData.price.toString()) : undefined
-    };
-    
-    const updatedItem = await item.update(updatedData);
-    console.log(`[ItemService] Updated item ${id}:`, updatedItem.toJSON());
-    const data = updatedItem.toJSON();
+
+    if (itemData.price) {
+      itemData.price = parseFloat(itemData.price.toString());
+    }
+
+    await item.update(itemData);
+    console.log(`[ItemService] Updated item ${id}:`, item.toJSON());
+    const data = item.toJSON();
     return {
       ...data,
       price: parseFloat(data.price.toString())
@@ -93,7 +92,7 @@ export const deleteItem = async (id: number) => {
       throw new Error('Item not found');
     }
     await item.destroy();
-    console.log(`[ItemService] Successfully deleted item ${id}`);
+    console.log(`[ItemService] Deleted item ${id}`);
   } catch (error) {
     console.error(`[ItemService] Error deleting item ${id}:`, error);
     throw error;

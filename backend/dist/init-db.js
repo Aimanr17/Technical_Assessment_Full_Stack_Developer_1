@@ -52,9 +52,7 @@ async function createDatabase() {
 }
 async function initDb() {
     try {
-        // First create the database
         await createDatabase();
-        // Then initialize Sequelize
         const sequelize = new sequelize_1.Sequelize({
             dialect: 'mysql',
             host: process.env.DB_HOST || '127.0.0.1',
@@ -65,25 +63,23 @@ async function initDb() {
         });
         await sequelize.authenticate();
         console.log('Database connection established successfully.');
-        // Import and sync models
         const ItemModel = (await Promise.resolve().then(() => __importStar(require('./models/item.model')))).default;
-        await ItemModel.sync({ force: true }); // This will drop and recreate the table
-        // Add sample data with Malaysian prices
+        await ItemModel.sync({ force: true });
         await ItemModel.bulkCreate([
             {
                 name: 'Laptop',
                 description: 'High-performance laptop with 16GB RAM',
-                price: 4999.99, // Updated to RM
+                price: 4999.99,
             },
             {
                 name: 'Smartphone',
                 description: 'Latest model with 5G capability',
-                price: 3299.99, // Updated to RM
+                price: 3299.99,
             },
             {
                 name: 'Headphones',
                 description: 'Noise-cancelling wireless headphones',
-                price: 899.99, // Updated to RM
+                price: 899.99,
             },
         ]);
         console.log('Database initialized successfully with sample data.');
