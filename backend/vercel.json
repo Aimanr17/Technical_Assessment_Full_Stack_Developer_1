@@ -18,11 +18,6 @@
       "dest": "/src/app.ts"
     },
     {
-      "src": "/api/items/(.*)",
-      "methods": ["GET", "POST", "PUT", "DELETE"],
-      "dest": "/src/app.ts"
-    },
-    {
       "src": "/api/(.*)",
       "dest": "/src/app.ts"
     },
