@@ -5,7 +5,7 @@
 
 [functions]
   node_bundler = "esbuild"
-  external_node_modules = ["mysql2"]
+  external_node_modules = ["mysql2", "sequelize"]
 
 [[redirects]]
   from = "/api/*"
