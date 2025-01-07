@@ -101,7 +101,7 @@ app.get('/api/items', async (req, res) => {
         
         const [rows] = await pool.execute<Item[]>('SELECT * FROM items');
         res.json(rows);
-    } catch (error) {
+    } catch (error: any) {
         console.error('Error fetching items:', error);
         res.status(500).json({ 
             error: 'Internal server error',
@@ -144,7 +144,7 @@ app.post('/api/items', async (req, res) => {
         }
         
         res.status(201).json(newItem);
-    } catch (error) {
+    } catch (error: any) {
         console.error('Error creating item:', error);
         res.status(500).json({ 
             error: 'Internal server error',
@@ -163,7 +163,7 @@ app.get('/', async (req, res) => {
         const connection = await pool.getConnection();
         connection.release();
         dbStatus = true;
-    } catch (error) {
+    } catch (error: unknown) {
         console.error('Health check database error:', error);
     }
 
