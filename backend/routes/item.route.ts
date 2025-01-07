@@ -1,91 +1,27 @@
-import express, { Express, Request, Response, NextFunction } from 'express';
-import cors from 'cors';
-import helmet from 'helmet';
-import itemRoute from "./routes/item.route";
-import sequelize from './config/database';
+import { Router } from "express";
+import {
+  getAllItemsController,
+  getItemByIdController,
+  createItemController,
+  updateItemController,
+  deleteItemController
+} from "../controllers/item.controller";
 
-const app: Express = express();
-const port = process.env.PORT || 3001;
+const router = Router();
 
-// Global error handler
-const errorHandler = (err: any, req: Request, res: Response, next: NextFunction) => {
-  console.error('Error:', {
-    message: err.message,
-    stack: err.stack,
-    timestamp: new Date().toISOString()
-  });
-  
-  res.status(500).json({
-    error: 'Internal Server Error',
-    message: process.env.NODE_ENV === 'development' ? err.message : 'An error occurred'
-  });
-};
+// Get all items
+router.get('/', getAllItemsController);
 
-// Request logging middleware
-app.use((req: Request, res: Response, next: NextFunction) => {
-  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
-  console.log('Headers:', req.headers);
-  console.log('Query:', req.query);
-  console.log('Body:', req.body);
-  next();
-});
+// Get single item by ID
+router.get('/:id', getItemByIdController);
 
-// Middleware
-app.use(helmet());
-app.use(cors({
-  origin: '*',
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// Create new item
+router.post('/', createItemController);
 
-// Create router for /api
-const apiRouter = express.Router();
+// Update item
+router.put('/:id', updateItemController);
 
-// Health check endpoint
-apiRouter.get('/', (req: Request, res: Response) => {
-  console.log('Health check endpoint called');
-  res.json({ 
-    status: 'ok', 
-    message: 'Server is running',
-    env: process.env.NODE_ENV,
-    time: new Date().toISOString()
-  });
-});
+// Delete item
+router.delete('/:id', deleteItemController);
 
-// Mount item routes
-apiRouter.use('/items', itemRoute);
-
-// Initialize database and start server
-const initializeApp = async () => {
-  try {
-    // Test database connection
-    await sequelize.authenticate();
-    console.log('Database connection established');
-
-    // Mount API router
-    app.use('/api', apiRouter);
-
-    // Error handling middleware
-    app.use(errorHandler);
-
-    // Handle 404
-    app.use((req: Request, res: Response) => {
-      res.status(404).json({ error: 'Not Found' });
-    });
-
-    if (process.env.NODE_ENV !== 'test') {
-      app.listen(port, () => {
-        console.log(`Server running on port ${port}`);
-      });
-    }
-  } catch (error) {
-    console.error('Unable to start server:', error);
-    process.exit(1);
-  }
-};
-
-initializeApp();
-
-export default app;
+export default router;
