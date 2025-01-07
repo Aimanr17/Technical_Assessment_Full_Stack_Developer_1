@@ -7,6 +7,20 @@ import sequelize from './config/database';
 const app: Express = express();
 const port = process.env.PORT || 3001;
 
+// Global error handler
+const errorHandler = (err: any, req: Request, res: Response, next: NextFunction) => {
+  console.error('Error:', {
+    message: err.message,
+    stack: err.stack,
+    timestamp: new Date().toISOString()
+  });
+  
+  res.status(500).json({
+    error: 'Internal Server Error',
+    message: process.env.NODE_ENV === 'development' ? err.message : 'An error occurred'
+  });
+};
+
 // Request logging middleware
 app.use((req: Request, res: Response, next: NextFunction) => {
   console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
@@ -18,7 +32,11 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 
 // Middleware
 app.use(helmet());
-app.use(cors());
+app.use(cors({
+  origin: '*', // Configure according to your frontend URL in production
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -32,85 +50,40 @@ apiRouter.get('/', (req: Request, res: Response) => {
     status: 'ok', 
     message: 'Server is running',
     env: process.env.NODE_ENV,
-    time: new Date().toISOString(),
-    headers: req.headers,
-    baseUrl: req.baseUrl,
-    originalUrl: req.originalUrl
+    time: new Date().toISOString()
   });
 });
 
-// Database test endpoint
-apiRouter.get('/db-test', async (req: Request, res: Response) => {
+// Initialize database and start server
+const initializeApp = async () => {
   try {
+    // Test database connection
     await sequelize.authenticate();
-    const [results] = await sequelize.query('SELECT 1+1 as result');
-    res.json({ 
-      status: 'ok', 
-      message: 'Database connection successful',
-      results,
-      env: process.env.NODE_ENV,
-      dbConfig: {
-        host: process.env.DB_HOST,
-        port: process.env.DB_PORT,
-        database: process.env.DB_NAME,
-        user: process.env.DB_USER
-      }
+    console.log('Database connection established');
+
+    // Mount routes
+    app.use('/api', apiRouter);
+    app.use('/api/items', itemRoute);
+
+    // Error handling middleware
+    app.use(errorHandler);
+
+    // Handle 404
+    app.use((req: Request, res: Response) => {
+      res.status(404).json({ error: 'Not Found' });
     });
-  } catch (error: any) {
-    console.error('Database test failed:', error);
-    res.status(500).json({ 
-      status: 'error', 
-      message: 'Database connection failed',
-      error: {
-        message: error.message,
-        code: error.original?.code,
-        errno: error.original?.errno,
-        sqlState: error.original?.sqlState,
-        sqlMessage: error.original?.sqlMessage
-      }
-    });
+
+    if (process.env.NODE_ENV !== 'test') {
+      app.listen(port, () => {
+        console.log(`Server running on port ${port}`);
+      });
+    }
+  } catch (error) {
+    console.error('Unable to start server:', error);
+    process.exit(1);
   }
-});
+};
 
-// Routes
-apiRouter.use('/items', itemRoute);
-
-// Mount API router
-app.use('/api', apiRouter);
-
-// Error handling middleware
-app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
-  console.error('Error:', err);
-  res.status(500).json({ 
-    error: 'Something broke!', 
-    message: err.message,
-    stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
-  });
-});
-
-// Handle 404
-app.use((req: Request, res: Response) => {
-  console.log('404 Not Found:', req.method, req.url);
-  res.status(404).json({ 
-    error: 'Not Found', 
-    message: 'The requested resource was not found',
-    path: req.path,
-    method: req.method
-  });
-});
-
-// Start server
-if (process.env.NODE_ENV !== 'test') {
-  app.listen(port, () => {
-    console.log(`⚡️[server]: Server is running at http://localhost:${port}`);
-    console.log('Environment:', process.env.NODE_ENV);
-    console.log('Database config:', {
-      host: process.env.DB_HOST,
-      port: process.env.DB_PORT,
-      database: process.env.DB_NAME,
-      user: process.env.DB_USER
-    });
-  });
-}
+initializeApp();
 
 export default app;
