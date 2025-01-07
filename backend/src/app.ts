@@ -1,5 +1,3 @@
-// Main application file
-
 import express from 'express';
 import cors from 'cors';
 import mysql from 'mysql2/promise';
@@ -8,60 +6,35 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 // Middleware
-app.use(cors());
+app.use(cors({
+    origin: process.env.NODE_ENV === 'production'
+        ? ['https://technical-assessment-full-stack-developer-1-frontend.vercel.app']
+        : ['http://localhost:5173', 'http://localhost:5174'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    credentials: true
+}));
 app.use(express.json());
 
 // Database configuration
 const dbConfig = {
-    host: process.env.DB_HOST,
+    host: process.env.DB_HOST || 'roundhouse.proxy.rlwy.net',
     port: parseInt(process.env.DB_PORT || '51179'),
-    user: process.env.DB_USER,
+    user: process.env.DB_USER || 'root',
     password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME,
-    waitForConnections: true,
-    connectionLimit: 10,
-    queueLimit: 0
+    database: process.env.DB_NAME || 'railway',
+    ssl: process.env.NODE_ENV === 'production' ? {} : undefined
 };
-
-console.log('Database config (without password):', {
-    ...dbConfig,
-    password: '****'
-});
 
 // Create database connection pool
 const pool = mysql.createPool(dbConfig);
 
 // Test database connection
 pool.getConnection()
-    .then(async (connection) => {
+    .then(connection => {
         console.log('Database connected successfully');
-        
-        // Test query to check if items table exists
-        try {
-            const [rows] = await connection.query('SHOW TABLES LIKE "items"');
-            if (Array.isArray(rows) && rows.length === 0) {
-                console.log('Items table does not exist. Creating it...');
-                await connection.query(`
-                    CREATE TABLE IF NOT EXISTS items (
-                        id INT AUTO_INCREMENT PRIMARY KEY,
-                        name VARCHAR(255) NOT NULL,
-                        description TEXT,
-                        price DECIMAL(10, 2) NOT NULL,
-                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-                    )
-                `);
-                console.log('Items table created successfully');
-            } else {
-                console.log('Items table already exists');
-            }
-        } catch (error) {
-            console.error('Error checking/creating items table:', error);
-        }
-        
         connection.release();
     })
     .catch(err => {
@@ -71,13 +44,11 @@ pool.getConnection()
 // API endpoints
 app.get('/api/items', async (req, res) => {
     try {
-        console.log('Fetching items from database...');
         const [rows] = await pool.execute('SELECT * FROM items');
-        console.log('Items fetched successfully:', rows);
         res.json(rows);
     } catch (error) {
         console.error('Error fetching items:', error);
-        res.status(500).json({ error: 'Internal server error', details: error.message });
+        res.status(500).json({ error: 'Internal server error' });
     }
 });
 
@@ -93,13 +64,13 @@ app.post('/api/items', async (req, res) => {
         res.status(201).json(newItem[0]);
     } catch (error) {
         console.error('Error creating item:', error);
-        res.status(500).json({ error: 'Internal server error', details: error.message });
+        res.status(500).json({ error: 'Internal server error' });
     }
 });
 
 // Health check endpoint
 app.get('/', (req, res) => {
-    res.json({ status: 'Server is running!' });
+    res.send('Server is running!');
 });
 
 app.listen(PORT, () => {

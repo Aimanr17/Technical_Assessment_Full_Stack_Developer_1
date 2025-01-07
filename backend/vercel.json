@@ -2,7 +2,7 @@
   "version": 2,
   "builds": [
     {
-      "src": "app.ts",
+      "src": "src/app.ts",
       "use": "@vercel/node",
       "config": {
         "maxLambdaSize": "10mb",
@@ -15,16 +15,20 @@
     {
       "src": "/api/items",
       "methods": ["GET", "POST", "PUT", "DELETE"],
-      "dest": "/app.ts"
+      "dest": "/src/app.ts"
     },
     {
       "src": "/api/items/(.*)",
       "methods": ["GET", "POST", "PUT", "DELETE"],
-      "dest": "/app.ts"
+      "dest": "/src/app.ts"
     },
     {
       "src": "/api/(.*)",
-      "dest": "/app.ts"
+      "dest": "/src/app.ts"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/src/app.ts"
     }
   ],
   "env": {
