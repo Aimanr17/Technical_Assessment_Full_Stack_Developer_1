@@ -7,9 +7,10 @@
   external_node_modules = ["mysql2", "sequelize"]
 
 [[redirects]]
-  from = "/api/*"
+  from = "/*"
   to = "/.netlify/functions/api/:splat"
   status = 200
+  force = true
 
 [build.environment]
   NODE_VERSION = "18"
