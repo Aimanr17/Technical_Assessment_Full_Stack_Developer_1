@@ -1,4 +1,4 @@
-import express, { Express } from 'express';
+import express, { Express, Request, Response, NextFunction } from 'express';
 import serverless from 'serverless-http';
 import cors from 'cors';
 import { json } from 'body-parser';
@@ -16,7 +16,7 @@ app.use(cors({
 app.use(json());
 
 // Health check endpoint
-app.get('/api/health', (req, res) => {
+app.get('/api/health', (_req: Request, res: Response) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
@@ -29,7 +29,7 @@ sequelize.authenticate()
   .catch(err => console.error('Database connection error:', err));
 
 // Error handling middleware
-app.use((err: any, req: any, res: any, next: any) => {
+app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
   console.error(err.stack);
   res.status(500).json({ 
     error: 'Something went wrong!',
