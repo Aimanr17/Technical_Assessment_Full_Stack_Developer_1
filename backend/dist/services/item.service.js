@@ -12,10 +12,7 @@ const getAllItems = async () => {
         console.log(`[ItemService] Found ${items.length} items`);
         return items.map(item => {
             const data = item.toJSON();
-            return {
-                ...data,
-                price: parseFloat(data.price.toString()) // Ensure price is converted to number
-            };
+            return Object.assign(Object.assign({}, data), { price: parseFloat(data.price.toString()) });
         });
     }
     catch (error) {
@@ -34,10 +31,7 @@ const getItemById = async (id) => {
         }
         console.log(`[ItemService] Found item ${id}:`, item.toJSON());
         const data = item.toJSON();
-        return {
-            ...data,
-            price: parseFloat(data.price.toString()) // Ensure price is converted to number
-        };
+        return Object.assign(Object.assign({}, data), { price: parseFloat(data.price.toString()) });
     }
     catch (error) {
         console.error(`[ItemService] Error getting item ${id}:`, error);
@@ -48,16 +42,10 @@ exports.getItemById = getItemById;
 const createItem = async (itemData) => {
     try {
         console.log('[ItemService] Creating new item:', itemData);
-        const item = await item_model_1.default.create({
-            ...itemData,
-            price: parseFloat(itemData.price.toString()) // Ensure price is converted to number
-        });
+        const item = await item_model_1.default.create(Object.assign(Object.assign({}, itemData), { price: parseFloat(itemData.price.toString()) }));
         console.log('[ItemService] Created item:', item.toJSON());
         const data = item.toJSON();
-        return {
-            ...data,
-            price: parseFloat(data.price.toString())
-        };
+        return Object.assign(Object.assign({}, data), { price: parseFloat(data.price.toString()) });
     }
     catch (error) {
         console.error('[ItemService] Error creating item:', error);
@@ -73,17 +61,13 @@ const updateItem = async (id, itemData) => {
             console.log(`[ItemService] Item ${id} not found`);
             throw new Error('Item not found');
         }
-        const updatedData = {
-            ...itemData,
-            price: itemData.price ? parseFloat(itemData.price.toString()) : undefined
-        };
-        const updatedItem = await item.update(updatedData);
-        console.log(`[ItemService] Updated item ${id}:`, updatedItem.toJSON());
-        const data = updatedItem.toJSON();
-        return {
-            ...data,
-            price: parseFloat(data.price.toString())
-        };
+        if (itemData.price) {
+            itemData.price = parseFloat(itemData.price.toString());
+        }
+        await item.update(itemData);
+        console.log(`[ItemService] Updated item ${id}:`, item.toJSON());
+        const data = item.toJSON();
+        return Object.assign(Object.assign({}, data), { price: parseFloat(data.price.toString()) });
     }
     catch (error) {
         console.error(`[ItemService] Error updating item ${id}:`, error);
@@ -100,7 +84,7 @@ const deleteItem = async (id) => {
             throw new Error('Item not found');
         }
         await item.destroy();
-        console.log(`[ItemService] Successfully deleted item ${id}`);
+        console.log(`[ItemService] Deleted item ${id}`);
     }
     catch (error) {
         console.error(`[ItemService] Error deleting item ${id}:`, error);
