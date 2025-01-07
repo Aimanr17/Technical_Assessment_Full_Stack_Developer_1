@@ -1,6 +1,6 @@
 import express from 'express';
 import cors from 'cors';
-import mysql from 'mysql2/promise';
+import mysql, { ResultSetHeader, RowDataPacket } from 'mysql2/promise';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -41,10 +41,20 @@ pool.getConnection()
         console.error('Error connecting to the database:', err);
     });
 
+// Define types for our items
+interface Item extends RowDataPacket {
+    id: number;
+    name: string;
+    description: string | null;
+    price: number;
+    created_at: Date;
+    updated_at: Date;
+}
+
 // API endpoints
 app.get('/api/items', async (req, res) => {
     try {
-        const [rows] = await pool.execute('SELECT * FROM items');
+        const [rows] = await pool.execute<Item[]>('SELECT * FROM items');
         res.json(rows);
     } catch (error) {
         console.error('Error fetching items:', error);
@@ -56,12 +66,17 @@ app.get('/api/items', async (req, res) => {
 app.post('/api/items', async (req, res) => {
     try {
         const { name, description, price } = req.body;
-        const [result] = await pool.execute(
+        const [result] = await pool.execute<ResultSetHeader>(
             'INSERT INTO items (name, description, price) VALUES (?, ?, ?)',
             [name, description, price]
         );
-        const [newItem] = await pool.execute('SELECT * FROM items WHERE id = ?', [result.insertId]);
-        res.status(201).json(newItem[0]);
+        
+        const [newItems] = await pool.execute<Item[]>(
+            'SELECT * FROM items WHERE id = ?',
+            [result.insertId]
+        );
+        
+        res.status(201).json(newItems[0]);
     } catch (error) {
         console.error('Error creating item:', error);
         res.status(500).json({ error: 'Internal server error' });
