@@ -8,7 +8,7 @@ const app: Express = express();
 const port = process.env.PORT || 3001;
 
 // Global error handler
-const errorHandler = (err: any, req: Request, res: Response, next: NextFunction) => {
+const errorHandler = (err: any, _req: Request, res: Response, _next: NextFunction) => {
   console.error('Error:', {
     message: err.message,
     stack: err.stack,
@@ -22,7 +22,7 @@ const errorHandler = (err: any, req: Request, res: Response, next: NextFunction)
 };
 
 // Request logging middleware
-app.use((req: Request, res: Response, next: NextFunction) => {
+app.use((req: Request, _res: Response, next: NextFunction) => {
   console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
   console.log('Headers:', req.headers);
   console.log('Query:', req.query);
@@ -33,7 +33,7 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 // Middleware
 app.use(helmet());
 app.use(cors({
-  origin: '*', // Configure according to your frontend URL in production
+  origin: '*',
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
@@ -44,7 +44,7 @@ app.use(express.urlencoded({ extended: true }));
 const apiRouter = express.Router();
 
 // Health check endpoint
-apiRouter.get('/', (req: Request, res: Response) => {
+apiRouter.get('/', (_req: Request, res: Response) => {
   console.log('Health check endpoint called');
   res.json({ 
     status: 'ok', 
@@ -54,6 +54,9 @@ apiRouter.get('/', (req: Request, res: Response) => {
   });
 });
 
+// Mount item routes
+apiRouter.use('/items', itemRoute);
+
 // Initialize database and start server
 const initializeApp = async () => {
   try {
@@ -61,15 +64,14 @@ const initializeApp = async () => {
     await sequelize.authenticate();
     console.log('Database connection established');
 
-    // Mount routes
+    // Mount API router
     app.use('/api', apiRouter);
-    app.use('/api/items', itemRoute);
 
     // Error handling middleware
     app.use(errorHandler);
 
     // Handle 404
-    app.use((req: Request, res: Response) => {
+    app.use((_req: Request, res: Response) => {
       res.status(404).json({ error: 'Not Found' });
     });
 

@@ -29,31 +29,31 @@ Item.init(
     name: {
       type: DataTypes.STRING(100),
       allowNull: false,
+      validate: {
+        notEmpty: true,
+        len: [1, 100]
+      }
     },
     description: {
-      type: DataTypes.STRING(500),
-      allowNull: true,
+      type: DataTypes.TEXT,
+      allowNull: true
     },
     price: {
-      type: DataTypes.DOUBLE,  // Changed to DOUBLE for better precision
+      type: DataTypes.DECIMAL(10, 2),
       allowNull: false,
-      get() {
-        const value = this.getDataValue('price');
-        return value === null ? null : Number(value);
-      },
       validate: {
         isPositive(value: number) {
-          if (value <= 0) {
-            throw new Error('Price must be positive');
+          if (parseFloat(value.toString()) <= 0) {
+            throw new Error('Price must be greater than 0');
           }
-        },
+        }
       },
     },
   },
   {
     sequelize,
     tableName: 'items',
-    timestamps: true,
+    timestamps: true
   }
 );
 

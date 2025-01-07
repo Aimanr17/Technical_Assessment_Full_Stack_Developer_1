@@ -19,9 +19,10 @@ const sequelize = new Sequelize({
   },
   dialectOptions: {
     connectTimeout: 60000,
-    ssl: process.env.NODE_ENV === 'production' ? {
-      rejectUnauthorized: true
-    } : false
+    ssl: {
+      require: true,
+      rejectUnauthorized: false // Accept self-signed certificates
+    }
   },
   retry: {
     max: 5,
@@ -30,5 +31,4 @@ const sequelize = new Sequelize({
   }
 });
 
-// Don't immediately authenticate - let the app handle it
 export default sequelize;
