@@ -1,6 +1,6 @@
 import express from 'express';
 import cors from 'cors';
-import mysql, { RowDataPacket, OkPacket } from 'mysql2/promise';
+import mysql, { Pool, RowDataPacket, OkPacket } from 'mysql2/promise';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -35,21 +35,49 @@ const dbConfig = {
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
-    ssl: process.env.NODE_ENV === 'production' ? {} : undefined
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0,
+    enableKeepAlive: true,
+    keepAliveInitialDelay: 0,
+    ssl: {}
 };
 
 // Create database connection pool
-const pool = mysql.createPool(dbConfig);
+let pool: Pool;
 
-// Test database connection
-pool.getConnection()
-    .then(connection => {
+const initializeDatabase = async () => {
+    try {
+        pool = mysql.createPool(dbConfig);
+        
+        // Test the connection
+        const connection = await pool.getConnection();
         console.log('Database connected successfully');
+        
+        // Test query to check if items table exists
+        const [tables] = await connection.query('SHOW TABLES LIKE "items"');
+        if (Array.isArray(tables) && tables.length === 0) {
+            console.log('Creating items table...');
+            await connection.query(`
+                CREATE TABLE IF NOT EXISTS items (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    name VARCHAR(255) NOT NULL,
+                    description TEXT,
+                    price DECIMAL(10, 2) NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+                )
+            `);
+            console.log('Items table created successfully');
+        }
+        
         connection.release();
-    })
-    .catch(err => {
-        console.error('Error connecting to the database:', err);
-    });
+        return true;
+    } catch (error) {
+        console.error('Database initialization error:', error);
+        return false;
+    }
+};
 
 // Define types for our items
 interface Item extends RowDataPacket {
@@ -64,9 +92,16 @@ interface Item extends RowDataPacket {
 // API endpoints
 app.get('/api/items', async (req, res) => {
     try {
+        if (!pool) {
+            const initialized = await initializeDatabase();
+            if (!initialized) {
+                throw new Error('Database not initialized');
+            }
+        }
+        
         const [rows] = await pool.execute<Item[]>('SELECT * FROM items');
         res.json(rows);
-    } catch (error) {
+    } catch (error: any) {
         console.error('Error fetching items:', error);
         res.status(500).json({ 
             error: 'Internal server error',
@@ -75,9 +110,15 @@ app.get('/api/items', async (req, res) => {
     }
 });
 
-// Create item endpoint
 app.post('/api/items', async (req, res) => {
     try {
+        if (!pool) {
+            const initialized = await initializeDatabase();
+            if (!initialized) {
+                throw new Error('Database not initialized');
+            }
+        }
+
         const { name, description, price } = req.body;
         
         if (!name || typeof price !== 'number') {
@@ -87,16 +128,14 @@ app.post('/api/items', async (req, res) => {
             });
         }
 
-        // First insert the new item
-        const [insertResult] = await pool.execute<OkPacket>(
+        const [result] = await pool.execute<OkPacket>(
             'INSERT INTO items (name, description, price) VALUES (?, ?, ?)',
             [name, description, price]
         );
         
-        // Then fetch the newly created item
         const [items] = await pool.execute<Item[]>(
             'SELECT * FROM items WHERE id = ?',
-            [insertResult.insertId]
+            [result.insertId]
         );
         
         const newItem = items[0];
@@ -105,7 +144,7 @@ app.post('/api/items', async (req, res) => {
         }
         
         res.status(201).json(newItem);
-    } catch (error) {
+    } catch (error: any) {
         console.error('Error creating item:', error);
         res.status(500).json({ 
             error: 'Internal server error',
@@ -115,19 +154,39 @@ app.post('/api/items', async (req, res) => {
 });
 
 // Health check endpoint
-app.get('/', (req, res) => {
+app.get('/', async (req, res) => {
+    let dbStatus = false;
+    try {
+        if (!pool) {
+            await initializeDatabase();
+        }
+        const connection = await pool.getConnection();
+        connection.release();
+        dbStatus = true;
+    } catch (error: unknown) {
+        console.error('Health check database error:', error);
+    }
+
     res.json({
-        status: 'Server is running!',
+        status: 'Server is running',
         environment: process.env.NODE_ENV,
         database: {
             host: process.env.DB_HOST,
             port: process.env.DB_PORT,
             name: process.env.DB_NAME,
-            connected: pool.pool?.pool?.length > 0
+            connected: dbStatus
         }
     });
 });
 
-app.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT} in ${process.env.NODE_ENV || 'development'} mode`);
+// Initialize database before starting server
+initializeDatabase().then((success) => {
+    if (success) {
+        app.listen(PORT, () => {
+            console.log(`Server is running on http://localhost:${PORT} in ${process.env.NODE_ENV || 'development'} mode`);
+        });
+    } else {
+        console.error('Failed to initialize database. Server not started.');
+        process.exit(1);
+    }
 });
