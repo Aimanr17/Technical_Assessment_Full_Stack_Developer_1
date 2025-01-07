@@ -30,7 +30,12 @@ Item.init(
       type: DataTypes.STRING(100),
       allowNull: false,
       validate: {
-        notEmpty: true,
+        notEmpty: {
+          msg: 'Name is required'
+        },
+        notNull: {
+          msg: 'Name is required'
+        },
         len: [1, 100]
       }
     },
@@ -46,6 +51,12 @@ Item.init(
           if (parseFloat(value.toString()) <= 0) {
             throw new Error('Price must be greater than 0');
           }
+        },
+        notNull: {
+          msg: 'Price is required'
+        },
+        notEmpty: {
+          msg: 'Price is required'
         }
       },
     },

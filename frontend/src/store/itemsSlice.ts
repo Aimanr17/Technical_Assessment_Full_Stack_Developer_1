@@ -3,7 +3,9 @@ import { Item, CreateItemDto, UpdateItemDto } from '../types/item';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+// const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+const API_URL =  'http://localhost:3001';
+
 
 interface ItemsState {
   items: Item[];
@@ -21,7 +23,7 @@ export const fetchItems = createAsyncThunk(
   'items/fetchItems',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await axios.get<Item[]>(`${API_URL}/items`);
+      const response = await axios.get<Item[]>(`${API_URL}/`);
       return response.data;
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Network Error');
@@ -34,7 +36,7 @@ export const createItem = createAsyncThunk(
   'items/createItem',
   async (data: CreateItemDto, { rejectWithValue }) => {
     try {
-      const response = await axios.post<Item>(`${API_URL}/items`, data);
+      const response = await axios.post<Item>(`${API_URL}/`, data);
       toast.success('Item created successfully');
       return response.data;
     } catch (error: any) {
@@ -48,7 +50,7 @@ export const updateItem = createAsyncThunk(
   'items/updateItem',
   async ({ id, data }: { id: number; data: UpdateItemDto }, { rejectWithValue }) => {
     try {
-      const response = await axios.put<Item>(`${API_URL}/items/${id}`, data);
+      const response = await axios.put<Item>(`${API_URL}/${id}`, data);
       toast.success('Item updated successfully');
       return response.data;
     } catch (error: any) {
@@ -62,7 +64,7 @@ export const deleteItem = createAsyncThunk(
   'items/deleteItem',
   async (id: number, { rejectWithValue }) => {
     try {
-      await axios.delete(`${API_URL}/items/${id}`);
+      await axios.delete(`${API_URL}/${id}`);
       toast.success('Item deleted successfully');
       return id;
     } catch (error: any) {

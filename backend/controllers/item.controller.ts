@@ -88,7 +88,9 @@ export const deleteItemController = async (
     console.log(`[deleteItemController] Deleting item ${id}`);
     await deleteItem(id);
     console.log(`[deleteItemController] Deleted item ${id}`);
-    res.status(204).send();
+    res.status(200).send({
+      message: 'Item deleted successfully'
+    });
   } catch (err) {
     console.error(`[deleteItemController] Error deleting item ${req.params.id}:`, err);
     if (err instanceof Error && err.message === 'Item not found') {
