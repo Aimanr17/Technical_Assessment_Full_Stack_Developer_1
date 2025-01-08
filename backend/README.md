@@ -1,11 +1,14 @@
 # Backend API for Item Management
 
-This is a RESTful API built with Express.js and TypeScript for managing items.
+This is a RESTful API built with Express.js and TypeScript for managing items. The API is deployed on Vercel and uses Railway MySQL for the database.
+
+## Live Demo
+- API Base URL: https://arkmind-aiman.vercel.app/api
+- Frontend: https://arkmind-aiman.vercel.app
 
 ## Prerequisites
 
 - Node.js (v14 or higher)
-- MySQL Server
 - npm or yarn
 
 ## Setup Instructions
@@ -15,24 +18,19 @@ This is a RESTful API built with Express.js and TypeScript for managing items.
    npm install
    ```
 
-2. Create a MySQL database named 'items_db'
-
-3. Configure environment variables:
-   - Copy `.env.dev` and modify the values according to your MySQL configuration:
+2. Configure environment variables:
+   - Copy `env-template.txt` to `.env` and update the values:
      ```
-     PORT=3000
-     DB_HOST=localhost
-     DB_USER=your_username
-     DB_PASSWORD=your_password
-     DB_NAME=items_db
+     PORT=3001
+     DB_HOST=roundhouse.proxy.rlwy.net
+     DB_PORT=51179
+     DB_USER=root
+     DB_PASSWORD=your_password_here
+     DB_NAME=railway
+     NODE_ENV=development
      ```
 
-4. Initialize the database:
-   ```bash
-   npm run init-db
-   ```
-
-5. Start the development server:
+3. Start the development server:
    ```bash
    npm run dev
    ```
@@ -75,3 +73,13 @@ The API returns appropriate HTTP status codes:
 - 400: Bad Request
 - 404: Not Found
 - 500: Server Error
+
+## Deployment
+
+This API is deployed on Vercel. The deployment configuration is in `vercel.json`. To deploy your own instance:
+
+1. Fork this repository
+2. Create a Vercel account and link it to your GitHub
+3. Import the repository to Vercel
+4. Set up the environment variables in Vercel's dashboard
+5. Deploy!
